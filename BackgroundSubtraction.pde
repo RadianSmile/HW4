@@ -1,19 +1,38 @@
+
+
+import ddf.minim.*;
+import ddf.minim.signals.*;
+
+Minim minim;
+AudioPlayer a ; 
+
 import gab.opencv.*;
 import processing.video.*;
+
+
 
 Capture video;
 OpenCV opencv;
 
+float currentVolume ; 
+float previousVolume ; 
 
+int[] array = new int[30] ;  
 
 void setup() {
   size(720, 480);
-  video = new Capture(this, 720,480);
-  opencv = new OpenCV(this, 720, 480);
+  //fullScreen();
   
+  video = new Capture(this, 640,480);
+  opencv = new OpenCV(this, 640, 480);
+
   opencv.startBackgroundSubtraction(5, 3, 0.5);
   
   video.start();
+  
+  minim = new Minim(this);
+  a = minim.loadFile("a.mp3", 1024);
+  a.loop();
   
 }
 
@@ -21,6 +40,7 @@ void setup() {
 //PImage currentImage ;
 //PImage grayDiff ; 
 void draw() {
+    //scale(2);
   background(0);
   //image(video, 0, 0); 
   
@@ -68,22 +88,36 @@ void draw() {
      
      if (points.size()> 0){
        PVector p = points.get(0) ;
-       println(p.x , p.y) ; 
+       //println(p.x , p.y) ; 
        noStroke();
        fill(random(0,255),random(0,255),random(0,255)) ; 
        ellipse(p.x , p.y , 20, 20 ) ; 
      }
-     
-     
-   //}
    i++ ; 
   }
-  println (i) ; 
+  
+  array[frameCount % 30] = i ;
+  
+  if ( frameCount % 30 ==0 && a.hasControl(Controller.GAIN) )
+  { //<>//
+    previousVolume = currentVolume ;  
+    currentVolume = map( max(array) , 20 ,250, -8, 6); //<>//
+    println (max(array)) ; 
+   
+  } //<>//
+  //println((millis() % 1000 ) /1000.0);
+  float val =  previousVolume + (frameCount % 30.0 ) /30.0 * (currentVolume - previousVolume) ; //<>//
+  //print(val + " ") ;
+  a.setGain(val) ;
+  
+  //println (i) ; 
 }
 
 //void movieEvent(Movie m) {
 //  m.read();
 //}
+
+
 
 void captureEvent(Capture c) {
   c.read();
